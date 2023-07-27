@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "vishc-chatbot"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [{include = "vishc_chatbot"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+langchain = "^0.0.245"
+streamlit = "^1.25.0"
+streamlit-chat = "^0.1.1"
+jq = "^1.4.1"
+openai = "^0.27.8"
+chromadb = "^0.4.3"
+tiktoken = "^0.4.0"
+pydantic = "1.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
