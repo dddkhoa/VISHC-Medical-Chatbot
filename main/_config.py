@@ -9,6 +9,9 @@ class Config(BaseSettings):
     LOGGING_LEVEL: int = logging.INFO
 
     OPENAI_API_KEY: str
+    HUGGINGFACEHUB_API_TOKEN: str
+    WEAVIATE_ENDPOINT: str
+    WEAVIATE_API_KEY: str
 
     class Config:
         case_sensitive = True
