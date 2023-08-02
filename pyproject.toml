@@ -16,6 +16,9 @@ openai = "^0.27.8"
 chromadb = "^0.4.3"
 tiktoken = "^0.4.0"
 pydantic = "1.10"
+datasets = "^2.14.2"
+weaviate-client = "^3.22.1"
+pytest = "^7.4.0"
 
 
 [build-system]
