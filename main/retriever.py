@@ -5,11 +5,19 @@ from main.enums import SearchType
 class Retriever:
     def search(self, search_type, query):
         if search_type == SearchType.SIMILARITY:
-            return self.similarity_search(query)
+            result = self.similarity_search(query)
         elif search_type == SearchType.BM25:
-            return self.BM25_search(query)
+            result = self.BM25_search(query)
+        elif search_type == SearchType.HYBRID:
+            result = self.hybrid_search(query)
         else:
             raise ValueError(f"search_type of {search_type} not allowed.")
+
+        docs = []
+        for doc in result["data"]["Get"][config.WEAVIATE_CLASS_NAME]:
+            docs.append(doc)
+
+        return docs
 
     def similarity_search(self, query: str, k: int = 4):
         result = (
@@ -22,11 +30,7 @@ class Retriever:
             .do()
         )
 
-        docs = []
-        for doc in result["data"]["Get"][config.WEAVIATE_CLASS_NAME]:
-            docs.append(doc)
-
-        return docs
+        return result
 
     def BM25_search(self, query: str, k: int = 4):
         result = (
@@ -39,8 +43,15 @@ class Retriever:
             .do()
         )
 
-        docs = []
-        for doc in result["data"]["Get"][config.WEAVIATE_CLASS_NAME]:
-            docs.append(doc)
+        return result
 
-        return docs
+    def hybrid_search(self, query: str, k: int = 4):
+        result = (
+            weaviate_client.query.get("MedicalDocs", ["en"])
+            .with_hybrid(query=query)
+            .with_additional("score")
+            .with_limit(k)
+            .do()
+        )
+
+        return result

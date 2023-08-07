@@ -20,6 +20,7 @@ class BaseEnum(str, Enum):
 class SearchType(BaseEnum):
     SIMILARITY = auto()
     BM25 = auto()
+    HYBRID = auto()
 
 
 WEAVIATE_SCHEMA_CLASS = "MSMarco_Toy"
