@@ -1,18 +1,11 @@
 import argparse
 import logging
-import os
 import time
 
 import datasets
 import weaviate
 
 from main import config
-
-HUGGINGFACEHUB_API_TOKEN = config.HUGGINGFACEHUB_API_TOKEN
-WEAVIATE_ENDPOINT = config.WEAVIATE_ENDPOINT
-WEAVIATE_API_KEY = config.WEAVIATE_API_KEY
-
-os.environ["HUGGINGFACEHUB_API_TOKEN"] = HUGGINGFACEHUB_API_TOKEN
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -124,9 +117,9 @@ class WeaviateDataManager:
 
 def upload_data():
     data_manager = WeaviateDataManager(
-        url=WEAVIATE_ENDPOINT,
-        auth_client_secret=WEAVIATE_API_KEY,
-        huggingfacehub_api_token=HUGGINGFACEHUB_API_TOKEN,
+        url=config.WEAVIATE_CLUSTER_URL,
+        auth_client_secret=config.WEAVIATE_API_KEY,
+        huggingfacehub_api_token=config.HUGGINGFACE_API_KEY,
     )
     data = data_manager.load_data()
     data_manager.upload(data)

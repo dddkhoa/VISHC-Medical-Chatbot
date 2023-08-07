@@ -2,11 +2,17 @@ import os
 
 import langchain
 import streamlit as st
-from langchain.chains import ConversationalRetrievalChain, RetrievalQA
+from langchain.chains import (
+    ConversationalRetrievalChain,
+    LLMChain,
+    RetrievalQA,
+    SequentialChain,
+)
 from langchain.chat_models import ChatOpenAI
+from langchain.prompts import ChatPromptTemplate
 from langchain.prompts.prompt import PromptTemplate
 
-from main import config
+from main import config, weaviate_client
 
 langchain.verbose = False
 
@@ -47,13 +53,27 @@ class Chatbot:
             return_source_documents=True,
             max_tokens_limit=4097,
             combine_docs_chain_kwargs={"prompt": self.QA_PROMPT},
+            output_key="en_answer",
+        )
+
+        fourth_prompt = ChatPromptTemplate.from_template(
+            "Translate this answer to Vietnamese:" "\n\n{en_answer}"
+        )
+
+        chain_four = LLMChain(llm=llm, prompt=fourth_prompt, output_key="vi_answer")
+
+        overall_chain = SequentialChain(
+            chains=[chain, chain_four],
+            input_variables=["question", "chat_history"],
+            output_variables=["en_answer", "vi_answer"],
+            verbose=True,
         )
 
         chain_input = {"question": query, "chat_history": st.session_state["history"]}
-        result = chain(chain_input)
+        result = overall_chain(chain_input)
 
-        st.session_state["history"].append((query, result["answer"]))
-        return result["answer"]
+        st.session_state["history"].append((query, result["en_answer"]))
+        return f"{result['en_answer']}\n\n{result['vi_answer']}"
 
     def chat(self, query):
         llm = ChatOpenAI(model_name=self.model_name, temperature=self.temperature)
@@ -62,7 +82,38 @@ class Chatbot:
             retriever=self.vectors.as_retriever(),
             return_source_documents=True,
             chain_type_kwargs={"prompt": self.QA_PROMPT},
+            output_key="en_answer",
         )
 
-        result = chain({"query": query})
-        return result["result"]
+        fourth_prompt = ChatPromptTemplate.from_template(
+            "Translate this answer to Vietnamese:" "\n\n{en_answer}"
+        )
+
+        chain_four = LLMChain(llm=llm, prompt=fourth_prompt, output_key="vi_answer")
+
+        overall_chain = SequentialChain(
+            chains=[chain, chain_four],
+            input_variables=["query"],
+            output_variables=["en_answer", "vi_answer"],
+            verbose=True,
+        )
+
+        result = overall_chain({"query": query})
+        return result
+
+    def chat_with_weaviate(self, query):
+        result = (
+            weaviate_client.query.get(
+                config.WEAVIATE_CLASS_NAME,
+                [
+                    config.WEAVIATE_RETRIEVED_CLASS_PROPERTIES,
+                    config.WEAVIATE_ANSWER_FORMAT,
+                ],
+            )
+            .with_ask({"question": query})
+            .with_limit(1)
+            .do()
+        )
+        return result["data"]["Get"]["MedicalDocs"][0]["_additional"]["answer"][
+            "result"
+        ]

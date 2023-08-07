@@ -9,9 +9,16 @@ class Config(BaseSettings):
     LOGGING_LEVEL: int = logging.INFO
 
     OPENAI_API_KEY: str
-    HUGGINGFACEHUB_API_TOKEN: str
-    WEAVIATE_ENDPOINT: str
+
+    HUGGINGFACE_API_KEY: str
+
+    # Weaviate
     WEAVIATE_API_KEY: str
+    WEAVIATE_CLUSTER_URL: str
+
+    WEAVIATE_CLASS_NAME: str = "MedicalDocs"
+    WEAVIATE_RETRIEVED_CLASS_PROPERTIES: list = ["en"]
+    WEAVIATE_ANSWER_FORMAT: str = "_additional {answer {result}}"
 
     class Config:
         case_sensitive = True
