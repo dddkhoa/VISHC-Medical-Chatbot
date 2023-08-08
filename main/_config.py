@@ -10,7 +10,7 @@ class Config(BaseSettings):
 
     OPENAI_API_KEY: str
 
-    HUGGINGFACE_API_KEY: str
+    HUGGINGFACEHUB_API_TOKEN: str
 
     # Weaviate
     WEAVIATE_API_KEY: str

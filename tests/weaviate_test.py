@@ -6,12 +6,12 @@ from main import config
 from main.weaviate_manager import WeaviateDataManager
 from tests.helper import inject_test_data
 
-os.environ["HUGGINGFACEHUB_API_TOKEN"] = config.HUGGINGFACE_API_KEY
+os.environ["HUGGINGFACEHUB_API_TOKEN"] = config.HUGGINGFACEHUB_API_TOKEN
 
 manager = WeaviateDataManager(
     url=config.WEAVIATE_CLUSTER_URL,
     auth_client_secret=config.WEAVIATE_API_KEY,
-    huggingfacehub_api_token=config.HUGGINGFACE_API_KEY,
+    huggingfacehub_api_token=config.HUGGINGFACEHUB_API_TOKEN,
 )
 
 

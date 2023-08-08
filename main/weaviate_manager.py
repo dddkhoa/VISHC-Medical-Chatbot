@@ -64,7 +64,7 @@ class WeaviateDataManager:
         logger.info(f"Deleting class object: {class_name}")
         self.client.schema.delete_class(class_name)
 
-    def upload(self, data, max_upload_size=1000, batch_size=100, max_rate_limit=200):
+    def upload(self, data, max_upload_size=100, batch_size=100, max_rate_limit=200):
         """
         In default `MS-MARCO` dataset, each query has 10 contexts (served as database for searching).
         For each query, create a separate class object. This class will have 10 objects/data points, one for each context.
@@ -75,9 +75,6 @@ class WeaviateDataManager:
         with self.client.batch(batch_size=batch_size):
             count = 0
             for i, d in enumerate(data):
-                if "No Answer Present." in d["answers"][0]:
-                    continue
-
                 if count < max_rate_limit:
                     class_name = f"MSMARCO_{i}"
                     self.create_class_obj(class_name)
@@ -119,7 +116,7 @@ def upload_data():
     data_manager = WeaviateDataManager(
         url=config.WEAVIATE_CLUSTER_URL,
         auth_client_secret=config.WEAVIATE_API_KEY,
-        huggingfacehub_api_token=config.HUGGINGFACE_API_KEY,
+        huggingfacehub_api_token=config.HUGGINGFACEHUB_API_TOKEN,
     )
     data = data_manager.load_data()
     data_manager.upload(data)

@@ -18,7 +18,10 @@ class Retriever:
         docs = []
         for doc in result["data"]["Get"][config.WEAVIATE_CLASS_NAME]:
             text = doc.pop(config.WEAVIATE_RETRIEVED_CLASS_PROPERTIES[0])
-            docs.append(Document(page_content=text, metadata=doc["_additional"]))
+            metadata = doc["_additional"]
+            for p in config.WEAVIATE_RETRIEVED_CLASS_PROPERTIES[1:]:
+                metadata[p] = doc[p]
+            docs.append(Document(page_content=text, metadata=metadata))
         return docs
 
     def similarity_search(self, query: str, k: int = 4):
@@ -39,7 +42,9 @@ class Retriever:
             weaviate_client.query.get(
                 config.WEAVIATE_CLASS_NAME, config.WEAVIATE_RETRIEVED_CLASS_PROPERTIES
             )
-            .with_bm25(query=query)
+            .with_bm25(
+                query=query, properties=[config.WEAVIATE_RETRIEVED_CLASS_PROPERTIES[0]]
+            )
             .with_additional("score")
             .with_limit(k)
             .do()
@@ -49,8 +54,12 @@ class Retriever:
 
     def hybrid_search(self, query: str, k: int = 4):
         result = (
-            weaviate_client.query.get("MedicalDocs", ["en"])
-            .with_hybrid(query=query)
+            weaviate_client.query.get(
+                config.WEAVIATE_CLASS_NAME, config.WEAVIATE_RETRIEVED_CLASS_PROPERTIES
+            )
+            .with_hybrid(
+                query=query, properties=[config.WEAVIATE_RETRIEVED_CLASS_PROPERTIES[0]]
+            )
             .with_additional("score")
             .with_limit(k)
             .do()

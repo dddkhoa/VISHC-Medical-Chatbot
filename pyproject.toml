@@ -19,6 +19,7 @@ pydantic = "1.10"
 datasets = "^2.14.2"
 weaviate-client = "^3.22.1"
 pytest = "^7.4.0"
+evaluate = "^0.4.0"
 
 
 [build-system]
