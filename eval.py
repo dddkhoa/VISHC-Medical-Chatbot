@@ -116,7 +116,7 @@ def get_scores(metric_name, preds_path, gold_data_path):
 
     logger.info(f"{metric_name} score: {score / total}")
     with open("eval_result_ms_marco.txt", "a") as f:
-        f.write(f"{metric_name}: {score}\n")
+        f.write(f"{metric_name}: {score / total}\n")
 
 
 def get_args():
