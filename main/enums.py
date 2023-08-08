@@ -23,5 +23,11 @@ class SearchType(BaseEnum):
     HYBRID = auto()
 
 
+class ChainKey(BaseEnum):
+    QUESTION = auto()
+    CONTEXT = auto()
+    ANSWER = auto()
+
+
 WEAVIATE_SCHEMA_CLASS = "MSMarco_Toy"
 WEAVIATE_TEXT_KEY = "context"

@@ -1,3 +1,5 @@
+from langchain.schema import Document
+
 from main import config, weaviate_client
 from main.enums import SearchType
 
@@ -15,8 +17,8 @@ class Retriever:
 
         docs = []
         for doc in result["data"]["Get"][config.WEAVIATE_CLASS_NAME]:
-            docs.append(doc)
-
+            text = doc.pop(config.WEAVIATE_RETRIEVED_CLASS_PROPERTIES[0])
+            docs.append(Document(page_content=text, metadata=doc["_additional"]))
         return docs
 
     def similarity_search(self, query: str, k: int = 4):

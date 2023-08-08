@@ -2,17 +2,25 @@ import os
 
 import langchain
 import streamlit as st
+from langchain.callbacks.manager import (
+    AsyncCallbackManagerForChainRun,
+    CallbackManagerForChainRun,
+)
 from langchain.chains import (
     ConversationalRetrievalChain,
     LLMChain,
     RetrievalQA,
     SequentialChain,
 )
+from langchain.chains.retrieval_qa.base import BaseRetrievalQA
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.prompts.prompt import PromptTemplate
+from langchain.schema import Document
 
-from main import config, weaviate_client
+from main import config
+from main.enums import SearchType
+from main.retriever import Retriever
 
 langchain.verbose = False
 
@@ -101,19 +109,36 @@ class Chatbot:
         result = overall_chain({"query": query})
         return result
 
-    def chat_with_weaviate(self, query):
-        result = (
-            weaviate_client.query.get(
-                config.WEAVIATE_CLASS_NAME,
-                [
-                    config.WEAVIATE_RETRIEVED_CLASS_PROPERTIES,
-                    config.WEAVIATE_ANSWER_FORMAT,
-                ],
-            )
-            .with_ask({"question": query})
-            .with_limit(1)
-            .do()
+    def chat_with_weaviate(self, query, search_type: SearchType):
+        llm = ChatOpenAI(model_name=self.model_name, temperature=self.temperature)
+        chain = LLMQAChain.from_llm(
+            llm,
+            search_type=search_type,
+            return_source_documents=True,
+            retriever=Retriever(),
+            prompt=self.QA_PROMPT,
         )
-        return result["data"]["Get"]["MedicalDocs"][0]["_additional"]["answer"][
-            "result"
-        ]
+
+        return chain({"query": query})
+
+
+class LLMQAChain(BaseRetrievalQA):
+    retriever: Retriever
+    search_type: str
+
+    def _get_docs(
+        self,
+        question: str,
+        *,
+        run_manager: CallbackManagerForChainRun,
+    ) -> list[Document]:
+        return self.retriever.search(search_type=self.search_type, query=question)
+
+    async def _aget_docs(
+        self,
+        question: str,
+        *,
+        run_manager: AsyncCallbackManagerForChainRun,
+    ) -> list[Document]:
+        """Get docs."""
+        pass
