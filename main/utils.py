@@ -12,7 +12,7 @@ class Utils:
         vectorstore = Weaviate(
             weaviate_client,
             config.WEAVIATE_CLASS_NAME,
-            config.WEAVIATE_RETRIEVED_CLASS_PROPERTIES,
+            config.WEAVIATE_RETRIEVED_CLASS_PROPERTIES[0],
         )
         print(vectorstore)
         return vectorstore
