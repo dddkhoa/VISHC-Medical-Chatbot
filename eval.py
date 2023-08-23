@@ -1,9 +1,8 @@
 import argparse
 import json
 import logging
-
-# import re
-# import string
+import re
+import string
 from collections import Counter
 
 import evaluate
@@ -13,22 +12,23 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
-# def normalize_answer(s):
-#     """Lower text and remove punctuation, articles and extra whitespace."""
-#     def remove_articles(text):
-#         return re.sub(r"\b(a|an|the)\b", " ", text)
-#
-#     def white_space_fix(text):
-#         return " ".join(text.split())
-#
-#     def remove_punc(text):
-#         exclude = set(string.punctuation)
-#         return "".join(ch for ch in text if ch not in exclude)
-#
-#     def lower(text):
-#         return text.lower()
-#
-#     return white_space_fix(remove_articles(remove_punc(lower(s))))
+def normalize_answer(s):
+    """Lower text and remove punctuation, articles and extra whitespace."""
+
+    def remove_articles(text):
+        return re.sub(r"\b(a|an|the)\b", " ", text)
+
+    def white_space_fix(text):
+        return " ".join(text.split())
+
+    def remove_punc(text):
+        exclude = set(string.punctuation)
+        return "".join(ch for ch in text if ch not in exclude)
+
+    def lower(text):
+        return text.lower()
+
+    return white_space_fix(remove_articles(remove_punc(lower(s))))
 
 
 def f1_score(prediction, ground_truth):
@@ -45,17 +45,26 @@ def f1_score(prediction, ground_truth):
 
 
 def calculate_score(metric_name, prediction, ground_truth):
+    prediction = normalize_answer(prediction)
+    ground_truth = normalize_answer(ground_truth)
+    logger.info(f"Prediction: {prediction}")
+    logger.info(f"Ground Truth: {ground_truth}")
+
     if metric_name == "f1":
         return f1_score(prediction, ground_truth)
     elif metric_name == "exact_match":
         metric = evaluate.load("exact_match")
     elif metric_name == "rouge":
         metric = evaluate.load("rouge")
+        result = metric.compute(predictions=[prediction], references=[ground_truth])
+        return result["rouge1"]
     elif metric_name == "bleu":
         metric = evaluate.load("bleu")
     elif metric_name == "bertscore":
         metric = evaluate.load("bertscore")
-        result = metric.compute(predictions=[prediction], references=[ground_truth])
+        result = metric.compute(
+            predictions=[prediction], references=[ground_truth], lang="en"
+        )
         return result["f1"]
     else:
         raise NotImplementedError
@@ -94,6 +103,24 @@ def mean_reciprocal_rank(predictions, ground_truths):
         f.write(f"Mean Reciprocal Rank score: {score}\n")
 
 
+def get_precision_at_k(preds_path, gold_data_path, k=4):
+    with open(gold_data_path, "r") as f:
+        gt_data = [json.loads(line) for line in f]
+
+    with open(preds_path, "r") as f:
+        pred_data = [json.loads(line) for line in f]
+
+    em = total = 0
+    for hypo, reference in tqdm(zip(pred_data, gt_data)):
+        hypo_provenance = set(hypo.split("\t")[:k])
+        ref_provenance = set(reference.split("\t"))
+        total += 1
+        em += len(hypo_provenance & ref_provenance) / k
+
+    em = 100.0 * em / total
+    logger.info(f"Precision@{k}: {em: .2f}")
+
+
 def get_scores(metric_name, preds_path, gold_data_path):
     with open(gold_data_path, "r") as f:
         gt_data = [json.loads(line) for line in f]
@@ -105,14 +132,19 @@ def get_scores(metric_name, preds_path, gold_data_path):
 
     for pred, gtruth in tqdm(zip(pred_data, gt_data)):
         total += 1
+        logger.info(f"Calculating score for query {total}")
+
         if isinstance(pred["predictions"], list):
             pred["predictions"] = pred["predictions"][0]["context"]
 
-        score += calculate_score(
+        tmp_score = calculate_score(
             metric_name=metric_name,
             prediction=pred["predictions"],
             ground_truth=gtruth["ground_truths"][0],
         )
+        if isinstance(tmp_score, list):
+            tmp_score = tmp_score[0]
+        score += tmp_score
 
     logger.info(f"{metric_name} score: {score / total}")
     with open("eval_result_ms_marco.txt", "a") as f:

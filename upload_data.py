@@ -1,34 +1,28 @@
 import json
+import time
 
-import weaviate
+from main import weaviate_client
 
-from main import config
 
-with open("./docs/data_mini.json", "r") as file:
-    data = json.load(file)
+def callback():
+    time.sleep(60)
 
-weaviate_auth_config = weaviate.AuthApiKey(api_key=config.WEAVIATE_API_KEY)
-weaviate_client = weaviate.Client(
-    url=config.WEAVIATE_CLUSTER_URL,
-    auth_client_secret=weaviate_auth_config,
-    additional_headers={
-        "X-OpenAI-Api-Key": config.OPENAI_API_KEY,
-        "X-HuggingFace-Api-Key": config.HUGGINGFACEHUB_API_TOKEN,
-    },
-)
 
-with weaviate_client.batch(batch_size=100) as batch:
-    # Batch import all Questions
+with open("./docs/vihealthqa/corpus.jsonl", "r") as file:
+    data = [json.loads(line) for line in file]
+
+
+with weaviate_client.batch(
+    batch_size=180, dynamic=False, timeout_retries=3, callback=callback
+) as batch:
     for i, d in enumerate(data):
         print(f"importing entry: {i}")
         properties = {
-            "url": d["url"],
-            "crawl_date": d["crawl_date"],
-            "en": d["en"],
-            "vi": d["vi"],
+            "text": d["text"],
+            "doc_id": d["_id"][len("doc") :],
         }
 
         weaviate_client.batch.add_data_object(
             properties,
-            "MedicalDocs",
+            "VietnameseCorpus",
         )

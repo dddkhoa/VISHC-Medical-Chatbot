@@ -1,7 +1,5 @@
 import json
 
-import datasets
-
 from main import config
 from main.retriever import Retriever
 from main.utils import Utils
@@ -10,50 +8,68 @@ utils = Utils()
 
 chatbot = utils.setup_chatbot()
 retriever = Retriever()
-data = datasets.load_dataset("ms_marco", "v2.1", split="validation")
+
+with open("./docs/vihealthqa/queries.jsonl", "r") as file:
+    data = [json.loads(line) for line in file]
+
+
+with open("./docs/vihealthqa/qrels/test.tsv", "r") as file:
+    file.readline()
+    test_data = {}
+    for line in file.readlines():
+        line = line.split("\t")
+        test_data[line[0]] = line[1][len("doc") :]
+
+
+def find_doc_with_id(doc_id):
+    result = None
+    with open("./docs/vihealthqa/corpus.jsonl", "r") as file:
+        tmp_data = [json.loads(line) for line in file]
+        for d in tmp_data:
+            if d["_id"][len("doc") :] == doc_id:
+                result = d["text"]
+
+    return result
 
 
 def create_data():
-    # TODO: Refactor code + handle logic
+    # TODO: Refactor code + handle logi
+    config.WEAVIATE_CLASS_NAME = "VietnameseCorpus"
+    config.WEAVIATE_RETRIEVED_CLASS_PROPERTIES = ["text", "doc_id"]
+
     for i, d in enumerate(data):
-        config.WEAVIATE_CLASS_NAME = f"MSMARCO_{i}"
-        config.WEAVIATE_RETRIEVED_CLASS_PROPERTIES = ["context", "isSelected"]
-
-        query = d["query"]
-        contexts = d["passages"]["passage_text"]
-        ground_truth = d["answers"][0]
-
-        with open("./docs/retrieval_preds.jsonl", "a") as f:
-            results = retriever.search(query=query, search_type="hybrid")
-            entry = {"query": query, "predictions": []}
-            for r in results:
-                tmp_pred = {
-                    "context": r.page_content,
-                    "isSelected": r.metadata["isSelected"],
-                }
-                entry["predictions"].append(tmp_pred)
-
-            f.write(json.dumps(entry) + "\n")
-
-        with open("./docs/retrieval_grounds.jsonl", "a") as f:
-            entry = {"query": query, "ground_truths": []}
-            for j, ctx in enumerate(contexts):
-                is_selected = bool(d["passages"]["is_selected"][j])
-                if is_selected:
-                    entry["ground_truths"].append(ctx)
+        query = d["text"]
+        query_id = d["_id"]
+        doc_id = test_data[query_id]
+        ground_truth = find_doc_with_id(doc_id)
+        if ground_truth:
+            with open("./docs/vihealthqa/results/retrieval_preds.jsonl", "a") as f:
+                results = retriever.search(query=query, search_type="hybrid")
+                entry = {"query": query, "predictions": []}
+                for r in results:
+                    tmp_pred = {
+                        "context": r.page_content,
+                    }
+                    entry["predictions"].append(tmp_pred)
 
                 f.write(json.dumps(entry) + "\n")
 
-        with open("./docs/generator_preds.jsonl", "a") as f:
-            answer = chatbot.chat_with_weaviate(query, search_type="hybrid")["result"]
-            entry = {"query": query, "predictions": answer}
-            f.write(json.dumps(entry) + "\n")
+            with open("./docs/vihealthqa/results/retrieval_grounds.jsonl", "a") as f:
+                entry = {"query": query, "ground_truths": []}
+                entry["ground_truths"].append(ground_truth)
 
-        with open("./docs/generator_grounds.jsonl", "a") as f:
-            entry = {"query": query, "ground_truths": ground_truth}
-            f.write(json.dumps(entry) + "\n")
+                f.write(json.dumps(entry) + "\n")
 
-        if i >= 8:
+        # with open("./docs/generator_preds.jsonl", "a") as f:
+        #     answer = chatbot.chat_with_weaviate(query, search_type="hybrid")["result"]
+        #     entry = {"query": query, "predictions": answer}
+        #     f.write(json.dumps(entry) + "\n")
+        #
+        # with open("./docs/generator_grounds.jsonl", "a") as f:
+        #     entry = {"query": query, "ground_truths": ground_truth}
+        #     f.write(json.dumps(entry) + "\n")
+
+        if i >= 199:
             break
 
 
