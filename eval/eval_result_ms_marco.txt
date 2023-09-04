@@ -1,0 +1,13 @@
+finetuned
+-----------------
+vi, alpha=0.5
+f1: 0.4276255746451731
+Mean Reciprocal Rank score: 0.18335365233570514
+----------------------
+vi, alpha=0.75
+f1: 0.4039067512189192
+Mean Reciprocal Rank score: 0.18335365233570514
+-----------------------
+en, alpha=0.75
+f1: 0.31200360803263333
+Mean Reciprocal Rank score: 0.18335365233570514

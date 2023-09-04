@@ -4,12 +4,12 @@ from main.utils import Utils
 
 utils = Utils()
 
-config.WEAVIATE_CLASS_NAME = "VietnameseCorpus"
-config.WEAVIATE_RETRIEVED_CLASS_PROPERTIES = ["text", "doc_id"]
+config.WEAVIATE_CLASS_NAME = "MedicalDocs"
+config.WEAVIATE_RETRIEVED_CLASS_PROPERTIES = ["text"]
 
 chatbot = utils.setup_chatbot()
 query = """
-viêm gan B"""
+Should 8-month-old baby with measles be abstinent and supplemented with calcium?"""
 retriever = Retriever()
 result = retriever.search(query=query, search_type="hybrid")
 for r in result:

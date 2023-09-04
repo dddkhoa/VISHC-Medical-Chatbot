@@ -19,7 +19,7 @@ class ChatHistory:
         st.session_state["user"] = [self.default_greeting()]
 
     def initialize_assistant_history(self):
-        st.session_state["assistant"] = [self.default_prompt("medical field")]
+        st.session_state["assistant"] = [self.default_prompt("the PDF file")]
 
     def initialize(self):
         if "assistant" not in st.session_state:

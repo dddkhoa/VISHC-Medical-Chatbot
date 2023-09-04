@@ -103,24 +103,6 @@ def mean_reciprocal_rank(predictions, ground_truths):
         f.write(f"Mean Reciprocal Rank score: {score}\n")
 
 
-def get_precision_at_k(preds_path, gold_data_path, k=4):
-    with open(gold_data_path, "r") as f:
-        gt_data = [json.loads(line) for line in f]
-
-    with open(preds_path, "r") as f:
-        pred_data = [json.loads(line) for line in f]
-
-    em = total = 0
-    for hypo, reference in tqdm(zip(pred_data, gt_data)):
-        hypo_provenance = set(hypo.split("\t")[:k])
-        ref_provenance = set(reference.split("\t"))
-        total += 1
-        em += len(hypo_provenance & ref_provenance) / k
-
-    em = 100.0 * em / total
-    logger.info(f"Precision@{k}: {em: .2f}")
-
-
 def get_scores(metric_name, preds_path, gold_data_path):
     with open(gold_data_path, "r") as f:
         gt_data = [json.loads(line) for line in f]
@@ -191,11 +173,6 @@ def main(args):
     if args.eval_mode == "retrieval":
         get_scores(
             metric_name="f1",
-            preds_path=args.predictions_path,
-            gold_data_path=args.gold_data_path,
-        )
-        get_scores(
-            metric_name="exact_match",
             preds_path=args.predictions_path,
             gold_data_path=args.gold_data_path,
         )

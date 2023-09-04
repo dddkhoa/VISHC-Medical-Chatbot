@@ -17,7 +17,7 @@ class Config(BaseSettings):
     WEAVIATE_CLUSTER_URL: str
 
     WEAVIATE_CLASS_NAME: str = "MedicalDocs"
-    WEAVIATE_RETRIEVED_CLASS_PROPERTIES: list = ["en"]
+    WEAVIATE_RETRIEVED_CLASS_PROPERTIES: list = ["text"]
     WEAVIATE_ANSWER_FORMAT: str = "_additional {answer {result}}"
 
     class Config:

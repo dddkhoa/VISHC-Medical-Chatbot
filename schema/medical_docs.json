@@ -1,48 +1,23 @@
 {
   "class": "MedicalDocs",
-  "vectorizer": "text2vec-huggingface",
+  "vectorizer": "text2vec-transformers",
   "properties": [
     {
       "dataType": [
         "text"
       ],
-      "name": "url"
-    },
-    {
-      "dataType": [
-        "text"
-      ],
-      "name": "crawl_date"
-    },
-    {
-      "dataType": [
-        "text"
-      ],
-      "name": "en"
-    },
-    {
-      "dataType": [
-        "text"
-      ],
-      "name": "vi"
+      "name": "text",
+      "moduleConfig": {
+            "text2vec-transformers": {
+              "skip": false,
+              "vectorizePropertyName": false
+            }
+          }
     }
   ],
   "moduleConfig": {
-    "text2vec-huggingface": {
-      "model": "sentence-transformers/all-MiniLM-L6-v2",
-      "options": {
-        "waitForModel": true
-      }
-    },
-    "generative-openai": {
-      "model": "gpt-3.5-turbo",
-      "temperatureProperty": 0.2,
-      "maxTokensProperty": 512
-    },
-    "qna-openai": {
-      "model": "text-davinci-002",
-      "maxTokens": 2500,
-      "temperature": 0.0
+    "text2vec-transformers": {
+          "vectorizeClassName": "false"
     }
   }
 }

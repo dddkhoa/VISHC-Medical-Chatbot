@@ -9,11 +9,11 @@ utils = Utils()
 chatbot = utils.setup_chatbot()
 retriever = Retriever()
 
-with open("./docs/vihealthqa/queries.jsonl", "r") as file:
+with open("../docs/vihealthqa/en_vi_queries.jsonl", "r") as file:
     data = [json.loads(line) for line in file]
 
 
-with open("./docs/vihealthqa/qrels/test.tsv", "r") as file:
+with open("../docs/vihealthqa/qrels/test.tsv", "r") as file:
     file.readline()
     test_data = {}
     for line in file.readlines():
@@ -23,7 +23,7 @@ with open("./docs/vihealthqa/qrels/test.tsv", "r") as file:
 
 def find_doc_with_id(doc_id):
     result = None
-    with open("./docs/vihealthqa/corpus.jsonl", "r") as file:
+    with open("../docs/vihealthqa/corpus.jsonl", "r") as file:
         tmp_data = [json.loads(line) for line in file]
         for d in tmp_data:
             if d["_id"][len("doc") :] == doc_id:
@@ -36,14 +36,14 @@ def create_data():
     # TODO: Refactor code + handle logi
     config.WEAVIATE_CLASS_NAME = "VietnameseCorpus"
     config.WEAVIATE_RETRIEVED_CLASS_PROPERTIES = ["text", "doc_id"]
-
-    for i, d in enumerate(data):
-        query = d["text"]
+    count = 815
+    for i, d in enumerate(data[825:]):
+        query = d["en_text"]
         query_id = d["_id"]
         doc_id = test_data[query_id]
         ground_truth = find_doc_with_id(doc_id)
         if ground_truth:
-            with open("./docs/vihealthqa/results/retrieval_preds.jsonl", "a") as f:
+            with open("../docs/vihealthqa/results/retrieval_preds.jsonl", "a") as f:
                 results = retriever.search(query=query, search_type="hybrid")
                 entry = {"query": query, "predictions": []}
                 for r in results:
@@ -53,12 +53,12 @@ def create_data():
                     entry["predictions"].append(tmp_pred)
 
                 f.write(json.dumps(entry) + "\n")
-
-            with open("./docs/vihealthqa/results/retrieval_grounds.jsonl", "a") as f:
-                entry = {"query": query, "ground_truths": []}
-                entry["ground_truths"].append(ground_truth)
-
-                f.write(json.dumps(entry) + "\n")
+            count += 1
+            # with open("./docs/vihealthqa/results/retrieval_grounds.jsonl", "a") as f:
+            #     entry = {"query": query, "ground_truths": []}
+            #     entry["ground_truths"].append(ground_truth)
+            #
+            #     f.write(json.dumps(entry) + "\n")
 
         # with open("./docs/generator_preds.jsonl", "a") as f:
         #     answer = chatbot.chat_with_weaviate(query, search_type="hybrid")["result"]
@@ -69,7 +69,7 @@ def create_data():
         #     entry = {"query": query, "ground_truths": ground_truth}
         #     f.write(json.dumps(entry) + "\n")
 
-        if i >= 199:
+        if count >= 1000:
             break
 
 

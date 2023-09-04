@@ -35,6 +35,7 @@ class Chatbot:
 
     qa_template = """
         You are a helpful AI assistant. Use the following pieces of context to answer user's question.
+        The language of the answer should be the same as the question.
         If you don't know the answer, just say you don't know. Do NOT try to make up an answer.
         If the question is not related to the context, politely respond that you are tuned to only answer questions that are related to the context.
         Use as much detail as possible when responding.
@@ -52,7 +53,7 @@ class Chatbot:
     def chat_with_history(self, query):
         llm = ChatOpenAI(model_name=self.model_name, temperature=self.temperature)
 
-        retriever = self.vectors.as_retriever()
+        retriever = self.vectors
 
         chain = ConversationalRetrievalChain.from_llm(
             llm=llm,
@@ -61,27 +62,29 @@ class Chatbot:
             return_source_documents=True,
             max_tokens_limit=4097,
             combine_docs_chain_kwargs={"prompt": self.QA_PROMPT},
-            output_key="en_answer",
+            output_key="answer",
         )
 
-        fourth_prompt = ChatPromptTemplate.from_template(
-            "Translate this answer to Vietnamese:" "\n\n{en_answer}"
-        )
-
-        chain_four = LLMChain(llm=llm, prompt=fourth_prompt, output_key="vi_answer")
+        # TODO: Remove automatic translation for faster computation speed
+        # Now the bot will only answer in the language it is asked
+        # fourth_prompt = ChatPromptTemplate.from_template(
+        #     "Translate this answer to Vietnamese:" "\n\n{en_answer}"
+        # )
+        #
+        # chain_four = LLMChain(llm=llm, prompt=fourth_prompt, output_key="vi_answer")
 
         overall_chain = SequentialChain(
-            chains=[chain, chain_four],
+            chains=[chain],
             input_variables=["question", "chat_history"],
-            output_variables=["en_answer", "vi_answer"],
+            output_variables=["answer"],
             verbose=True,
         )
 
         chain_input = {"question": query, "chat_history": st.session_state["history"]}
         result = overall_chain(chain_input)
 
-        st.session_state["history"].append((query, result["en_answer"]))
-        return f"{result['en_answer']}\n\n{result['vi_answer']}"
+        st.session_state["history"].append((query, result["answer"]))
+        return f"{result['answer']}\n\n"
 
     def chat(self, query):
         llm = ChatOpenAI(model_name=self.model_name, temperature=self.temperature)

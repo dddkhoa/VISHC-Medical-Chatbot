@@ -1,4 +1,4 @@
-from langchain.vectorstores import Weaviate
+from langchain.retrievers.weaviate_hybrid_search import WeaviateHybridSearchRetriever
 
 from main import config, weaviate_client
 from main.chatbot import Chatbot
@@ -9,12 +9,14 @@ class Utils:
 
     @staticmethod
     def create_vectors():
-        vectorstore = Weaviate(
-            weaviate_client,
-            config.WEAVIATE_CLASS_NAME,
-            config.WEAVIATE_RETRIEVED_CLASS_PROPERTIES[0],
+        vectorstore = WeaviateHybridSearchRetriever(
+            client=weaviate_client,
+            index_name=config.WEAVIATE_CLASS_NAME,
+            text_key=config.WEAVIATE_RETRIEVED_CLASS_PROPERTIES[0],
+            alpha=0.5,
+            k=4,
+            create_schema_if_missing=False,
         )
-        print(vectorstore)
         return vectorstore
 
     def setup_chatbot(

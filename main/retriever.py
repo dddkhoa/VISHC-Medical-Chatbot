@@ -60,7 +60,7 @@ class Retriever:
             .with_hybrid(
                 query=query,
                 properties=[config.WEAVIATE_RETRIEVED_CLASS_PROPERTIES[0]],
-                alpha=0.5,
+                alpha=0.75,
             )
             .with_additional("score")
             .with_limit(k)
