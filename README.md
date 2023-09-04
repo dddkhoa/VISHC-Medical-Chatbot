@@ -8,6 +8,7 @@ Note: Thank you for your interest in our application.
 3. Retriever: Hybrid Search (BM25+Semantic Search, alpha=0.5)
 4. Generator: gpt-turbo-3.5 (https://platform.openai.com/docs/models/gpt-3-5)
 
+Note: Chunk size for PDF text is 1000 characters.
 ## Requirements
 
 - Python 3.10
