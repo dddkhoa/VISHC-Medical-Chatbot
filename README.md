@@ -2,6 +2,9 @@
 Note: Thank you for your interest in our application.
         Please be aware that this is only a Proof of Concept system
         and may contain bugs or unfinished features.
+
+## For a technical writeup, please check our report at [link](https://github.com/dddkhoa/VISHC-Medical-Chatbot/blob/eval-local/Bilingual_Document_based_Question_AnBilingual_Document_baseswering_for_Medical_Domain.pdf)
+
 ## Demo Pipeline
 1. Vector Database: https://weaviate.io/
 2. Embedding: https://huggingface.co/kaiserrr/Bilingual-BioSimCSE-BioLinkBERT-base
